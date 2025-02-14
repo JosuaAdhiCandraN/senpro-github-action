@@ -1,17 +1,17 @@
 name: Test, Build, and Deploy | Modul 01 - Lab2.2 Senior Project
-
+ 
 on:
   push:
     branches: [main]
-
+ 
 jobs:
   test-build:
     runs-on: ubuntu-latest
-
+ 
     strategy:
       matrix:
         node-version: [16.x]
-        
+ 
     steps:
       - uses: actions/checkout@v2
       - name: Testing Build pre-Deploy
@@ -20,45 +20,46 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
       - run: npm i
-      - run: npm run build 
-
-    deploy: 
-      needs: test-build
-      runs-on: ubuntu-lastest
-
-      strategy:
-        matrix:
-          node-version: [16.x]
-      
-      steps:
-        - name: Build app on VM
-          uses: appleboy/ssh-action@master
-          with:
-            host: ${{ secrects.HOST }}
-            username: ${{ secrets.USERNAME }}
-            password: ${{ secrets.PASSWORD }}
-            port: ${{ secrets.PORT }}
-            script: | 
-              eval "$(ssh-agent -s)"
-              ssh-add ~/.ssh/ssh-praktikan99
-              echo "Cek folder project" 
-              [ ! -d "${HOME}/senpro/503935/modul02/senpro-github-action/" ] &&
-                {
-                  echo "Repository belum di-clone. Cloning...";
-                  mkdir -p ~/senpro/503935/modul02;
-                  cd ~/senpro/503935/modul02;
-                  git clone https://github.com/JosuaAdhiCandraN/senpro-github-action.git;
-                  cd ~/senpro/503935/modul02/senpro-github-action;
-                  echo "Install Package dan Build Project";
-                  npm install;
-                  npm run build;
-                } || 
-                {
-                  echo "Repository sudah ada. Building...";
-                  cd ~/senpro/503935/modul02/senpro-github-action;
-                  git restore .;
-                  git pull origin main;
-                  echo "Install Package dan Build Project";
-                  npm install;
-                  npm run build;
-                }
+      - run: npm run build
+   
+  deploy:
+    needs: test-build
+    runs-on: ubuntu-latest
+ 
+    strategy:
+      matrix:
+        node-version: [16.x]
+   
+    steps:
+      - name: Build app on VM
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            eval "${ssh-agent -s}"
+            ssh-add ~/.ssh/ssh-praktikan99
+            echo "Cek folder project";
+            [ ! -d "${HOME}/senpro/503935/modul02/senpro-github-action/" ] &&
+              {
+                echo "Repository belum di-clone. Cloning...";
+                mkdir -p ~/senpro/503935/modul02;
+                cd ~/senpro/503935/modul02;
+                git clone https://github.com/JosuaAdhiCandraN/senpro-github-action.git;
+                cd ~/senpro/503935/modul02/senpro-github-action;
+                echo "Install Package dan Build Project";
+                npm install;
+                npm run build;
+              } ||
+              {
+                echo "Repository sudah ada. Building...";
+                cd ~/senpro/503935/modul02/senpro-github-action;
+                git restore .;
+                git pull origin main;
+                echo "Install Package dan Build Project";
+                npm install;
+                npm run build;
+              }
+ 
